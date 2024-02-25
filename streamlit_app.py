@@ -14,6 +14,7 @@ from streamlit_folium import folium_static
 #from datetime import datetime, timedelta
 import sqlite3
 import streamlit as st
+import spatialite
 
 #sqlitepath = './vlog/'
 
@@ -152,11 +153,10 @@ def maken_selecties():
 
 def mappen(bufferscale):
     
-    #con = sqlite3.connect(sqlitepath + "vlogdashboard.sqlite")
-    con = sqlite3.connect("vlogdashboard.sqlite")
+    con = spatialite.connect("vlogdashboard.sqlite")
 
-    con.enable_load_extension(True)
-    con.execute("SELECT load_extension('mod_spatialite')")
+    #con.enable_load_extension(True)
+    #con.execute("SELECT load_extension('mod_spatialite')")
 
     sgs = pd.read_sql_query("SELECT * from mapping", con)
     sgs['link_id'] = sgs['link_id'].astype(int)
@@ -198,10 +198,13 @@ def mappen(bufferscale):
     dfs = dfs.groupby(['link_id']).sum(min_count=1).reset_index()
 
     # koppelen aan network_base
-    
     # https://gist.github.com/perrygeo/868135514d2518257bbb
-    sql = "SELECT link_id,Hex(ST_AsBinary(GEOMETRY)) as geometry FROM network_base;"
-    gdf = gpd.GeoDataFrame.from_postgis(sql, con, geom_col="geometry")
+
+    sql = "SELECT link_id,Hex(ST_AsBinary(GEOMETRY)) as geom FROM network_base;"
+    gdf = gpd.GeoDataFrame.from_postgis(sql, con, geom_col= 'geom')
+    gdf.rename(columns={'geom': 'geometry'}, inplace = True)
+    gdf = gdf.set_geometry('geometry')
+
     gdf = gdf.set_crs(28992)
 
     
@@ -266,7 +269,6 @@ def mappen(bufferscale):
     # corrigeren 0 buffies
     gdf.loc[(gdf['buffie'] ==0), 'buffie'] = 1
 
-    
     gdf['geometry'] = gdf['geometry'].buffer(gdf['buffie'], single_sided=True)
     
     gdf = gdf.to_crs(4326)
