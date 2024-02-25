@@ -14,7 +14,10 @@ from streamlit_folium import folium_static
 #from datetime import datetime, timedelta
 import sqlite3
 import streamlit as st
-import spatialite
+#import spatialite  # deze werkt niet in de streamlit cloud
+from sqlalchemy import create_engine
+
+engine = create_engine("sqlite:///vlogdashboard.sqlite")  
 
 #sqlitepath = './vlog/'
 
@@ -153,7 +156,7 @@ def maken_selecties():
 
 def mappen(bufferscale):
     
-    con = spatialite.connect("vlogdashboard.sqlite")
+    con = sqlite3.connect("vlogdashboard.sqlite")
 
     #con.enable_load_extension(True)
     #con.execute("SELECT load_extension('mod_spatialite')")
@@ -200,13 +203,16 @@ def mappen(bufferscale):
     # koppelen aan network_base
     # https://gist.github.com/perrygeo/868135514d2518257bbb
 
-    sql = "SELECT link_id,Hex(ST_AsBinary(GEOMETRY)) as geom FROM network_base;"
-    gdf = gpd.GeoDataFrame.from_postgis(sql, con, geom_col= 'geom')
-    gdf.rename(columns={'geom': 'geometry'}, inplace = True)
-    gdf = gdf.set_geometry('geometry')
+    #sql = "SELECT link_id,Hex(ST_AsBinary(GEOMETRY)) as geom FROM network_base;"
+    #gdf = gpd.GeoDataFrame.from_postgis(sql, con, geom_col= 'geom')
+    #gdf = gpd.read_postgis(sql, engine)
+    #gdf.rename(columns={'geom': 'geometry'}, inplace = True)
+    #gdf = gdf.set_geometry('geometry')
+    
+    zipfile = 'zip://network_base.zip'
+    gdf = gpd.read_file(zipfile)
 
     gdf = gdf.set_crs(28992)
-
     
     dfs['link'] = dfs['link_id']
     dfs['link_id'] = abs(dfs['link_id'])
