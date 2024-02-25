@@ -15,9 +15,6 @@ from streamlit_folium import folium_static
 import sqlite3
 import streamlit as st
 #import spatialite  # deze werkt niet in de streamlit cloud
-from sqlalchemy import create_engine
-
-engine = create_engine("sqlite:///vlogdashboard.sqlite")  
 
 #sqlitepath = './vlog/'
 
